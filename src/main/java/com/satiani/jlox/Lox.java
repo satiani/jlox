@@ -48,11 +48,11 @@ public class Lox {
         Scanner scanner = new Scanner(source);
         List<Token> tokens = scanner.scanTokens();
         Parser parser = new Parser(tokens);
-        Expr expression = parser.parse();
+        List<Stmt> statements = parser.parse();
 
         if (hadError) return;
 
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     static void error(int line, String message) {
@@ -72,7 +72,7 @@ public class Lox {
         }
     }
 
-    public static void runtimeError(RuntimeError err) {
+    static void runtimeError(RuntimeError err) {
         System.err.println(err.getMessage() + "\n[line " +
                 err.token.line + "]");
         hadRuntimeError = true;

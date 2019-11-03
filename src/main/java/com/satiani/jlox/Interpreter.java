@@ -1,10 +1,13 @@
 package com.satiani.jlox;
 
-public class Interpreter implements Expr.Visitor<Object> {
-    void interpret(Expr expression) {
+import java.util.List;
+
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(expression);
-            System.out.println(stringify(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
         } catch (RuntimeError err) {
             Lox.runtimeError(err);
         }
@@ -77,10 +80,6 @@ public class Interpreter implements Expr.Visitor<Object> {
         return evaluate(expr.expression);
     }
 
-    private Object evaluate(Expr expression) {
-        return expression.accept(this);
-    }
-
     @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         Object value = evaluate(expr.right);
@@ -95,6 +94,33 @@ public class Interpreter implements Expr.Visitor<Object> {
 
         return null;
     }
+
+    @Override
+    public Object visitLiteralExpr(Expr.Literal expr) {
+        return expr.value;
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(stringify(value));
+        return null;
+    }
+
+    private Object evaluate(Expr expression) {
+        return expression.accept(this);
+    }
+
+    private void execute(Stmt statement) {
+        statement.accept(this);
+    }
+
 
     private void checkNumberOperand(Token operator, Object operand) {
         if (operand instanceof Double) return;
@@ -116,10 +142,5 @@ public class Interpreter implements Expr.Visitor<Object> {
         if (left == null && right == null) return true;
         if (left == null) return false;
         return left.equals(right);
-    }
-
-    @Override
-    public Object visitLiteralExpr(Expr.Literal expr) {
-        return expr.value;
     }
 }
